@@ -1,15 +1,16 @@
 package paytrgo
 
 import (
+	"os"
 	"testing"
 )
 
 func TestPayTRToken(t *testing.T) {
 	var valuesList = map[string]string{
-		"merchantID":      "141763",
-		"merchantKey":     "jwqRR2NEh2QxRjFK",
-		"merchantSalt":    "Z2EzjdJxaqzUxiCG",
-		"email":           "info@nanomedya.com.tr",
+		"merchantID":      os.Getenv("PAYTR_MERCHANT_ID"),
+		"merchantKey":     os.Getenv("PAYTR_MERCHANT_KEY"),
+		"merchantSalt":    os.Getenv("PAYTR_MERCHANT_SALT"),
+		"email":           "info@yahoo.com",
 		"paymentAmount":   "3588",
 		"merchantOid":     "1909131",
 		"userIP":          "192.168.1.56",
