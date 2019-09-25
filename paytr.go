@@ -26,13 +26,13 @@ type PayTRResponse struct {
 	Token  string `json:"token"`
 }
 
-// PayTRToken gerekli bilgileri alıp kullanıcı onayından sonra
+// GetToken gerekli bilgileri alıp kullanıcı onayından sonra
 // kullanım için bir token bilgisi verir.
-func PayTRToken(list map[string]string, productList []Product) PayTRResponse {
+func GetToken(list map[string]string, productList []Product) PayTRResponse {
 	var basket = getBasket(productList)
 
 	var hashStr = getValuesString(list, basket)
-	var paytrToken = createPayTRToken(hashStr, list["merchantSalt"], list["merchantKey"])
+	var paytrToken = createPayTrToken(hashStr, list["merchantSalt"], list["merchantKey"])
 
 	var paytrValues = url.Values{
 		"merchant_id":       {list["merchantID"]},
@@ -56,6 +56,24 @@ func PayTRToken(list map[string]string, productList []Product) PayTRResponse {
 	}
 
 	return connect(paytrValues)
+}
+
+// CheckHash paytr tarafından gönderilen bildirim mesajını doğrulamak
+// icin hash doğrulaması yapar.
+func CheckHash(paytrData map[string]string, merchantKey string, merchantSalt string) (bool, string) {
+	h := hmac.New(sha256.New, []byte(merchantKey))
+	h.Write([]byte(paytrData["merchant_oid"]))
+	h.Write([]byte(merchantSalt))
+	h.Write([]byte(paytrData["status"]))
+	h.Write([]byte(paytrData["total_amount"]))
+	var hash = base64.StdEncoding.EncodeToString(h.Sum(nil))
+
+	var check = false
+	if hash == paytrData["hash"] {
+		check = true
+	}
+
+	return check, hash
 }
 
 // Ürünleri uygun formatta bir dizge haline getirir.
@@ -94,7 +112,7 @@ func getValuesString(list map[string]string, basket string) string {
 }
 
 // Kimlik dogrulama icin gerekli token dizesini oluşturur.
-func createPayTRToken(hashStr string, merchantSalt string, merchantKey string) string {
+func createPayTrToken(hashStr string, merchantSalt string, merchantKey string) string {
 	h := hmac.New(sha256.New, []byte(merchantKey))
 	h.Write([]byte(hashStr))
 	h.Write([]byte(merchantSalt))
